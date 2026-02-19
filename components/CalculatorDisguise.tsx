@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -13,7 +13,11 @@ export default function CalculatorDisguise({ onUnlock, pin }: CalculatorDisguise
   const [prevValue, setPrevValue] = useState<number | null>(null);
   const [operation, setOperation] = useState<string | null>(null);
   const [waitingForNext, setWaitingForNext] = useState(false);
-  const [inputSequence, setInputSequence] = useState('');
+  const seqRef = useRef('');
+  const displayRef = useRef('0');
+  const prevValueRef = useRef<number | null>(null);
+  const operationRef = useRef<string | null>(null);
+  const waitingRef = useRef(false);
 
   const haptic = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -24,79 +28,100 @@ export default function CalculatorDisguise({ onUnlock, pin }: CalculatorDisguise
   const handleNumber = useCallback(
     (num: string) => {
       haptic();
-      const newSeq = inputSequence + num;
-      setInputSequence(newSeq);
+      seqRef.current += num;
 
-      if (waitingForNext) {
-        setDisplay(num);
+      let newDisplay: string;
+      if (waitingRef.current) {
+        newDisplay = num;
+        waitingRef.current = false;
         setWaitingForNext(false);
       } else {
-        setDisplay(display === '0' ? num : display + num);
+        newDisplay = displayRef.current === '0' ? num : displayRef.current + num;
       }
+      displayRef.current = newDisplay;
+      setDisplay(newDisplay);
     },
-    [display, waitingForNext, inputSequence, haptic],
+    [haptic],
   );
 
   const handleOperation = useCallback(
     (op: string) => {
       haptic();
-      const current = parseFloat(display);
+      const current = parseFloat(displayRef.current);
 
       if (op === '=') {
-        const newSeq = inputSequence + '=';
-        if (newSeq.includes(pin + '=')) {
+        seqRef.current += '=';
+        if (seqRef.current.includes(pin + '=')) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
           onUnlock();
           return;
         }
-        setInputSequence(newSeq);
 
-        if (prevValue !== null && operation) {
+        if (prevValueRef.current !== null && operationRef.current) {
           let result = 0;
-          switch (operation) {
-            case '+': result = prevValue + current; break;
-            case '-': result = prevValue - current; break;
-            case '×': result = prevValue * current; break;
-            case '÷': result = current !== 0 ? prevValue / current : 0; break;
+          switch (operationRef.current) {
+            case '+': result = prevValueRef.current + current; break;
+            case '-': result = prevValueRef.current - current; break;
+            case '×': result = prevValueRef.current * current; break;
+            case '÷': result = current !== 0 ? prevValueRef.current / current : 0; break;
           }
-          setDisplay(String(result));
+          const resultStr = String(result);
+          displayRef.current = resultStr;
+          setDisplay(resultStr);
+          prevValueRef.current = null;
           setPrevValue(null);
+          operationRef.current = null;
           setOperation(null);
         }
         return;
       }
 
       if (op === 'AC') {
+        displayRef.current = '0';
         setDisplay('0');
+        prevValueRef.current = null;
         setPrevValue(null);
+        operationRef.current = null;
         setOperation(null);
+        waitingRef.current = false;
         setWaitingForNext(false);
-        setInputSequence('');
+        seqRef.current = '';
         return;
       }
 
       if (op === '±') {
-        setDisplay(String(parseFloat(display) * -1));
+        const val = String(parseFloat(displayRef.current) * -1);
+        displayRef.current = val;
+        setDisplay(val);
         return;
       }
 
       if (op === '%') {
-        setDisplay(String(parseFloat(display) / 100));
+        const val = String(parseFloat(displayRef.current) / 100);
+        displayRef.current = val;
+        setDisplay(val);
         return;
       }
 
       if (op === '.') {
-        if (!display.includes('.')) {
-          setDisplay(display + '.');
+        if (!displayRef.current.includes('.')) {
+          displayRef.current += '.';
+          setDisplay(displayRef.current);
         }
         return;
       }
 
+      prevValueRef.current = current;
       setPrevValue(current);
+      operationRef.current = op;
       setOperation(op);
+      waitingRef.current = true;
       setWaitingForNext(true);
-      setInputSequence(inputSequence + op);
+      seqRef.current += op;
     },
-    [display, prevValue, operation, inputSequence, pin, onUnlock, haptic],
+    [pin, onUnlock, haptic],
   );
 
   const formatDisplay = (val: string) => {

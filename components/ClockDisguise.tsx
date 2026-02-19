@@ -20,9 +20,10 @@ export default function ClockDisguise({ onUnlock, pin }: ClockDisguiseProps) {
   const insets = useSafeAreaInsets();
   const [time, setTime] = useState(new Date());
   const [showPinInput, setShowPinInput] = useState(false);
-  const [pinInput, setPinInput] = useState('');
+  const [pinDisplay, setPinDisplay] = useState('');
   const [pinError, setPinError] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pinRef = useRef('');
 
   useEffect(() => {
     const interval = setInterval(() => setTime(new Date()), 1000);
@@ -34,9 +35,10 @@ export default function ClockDisguise({ onUnlock, pin }: ClockDisguiseProps) {
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
-      setShowPinInput(true);
-      setPinInput('');
+      pinRef.current = '';
+      setPinDisplay('');
       setPinError(false);
+      setShowPinInput(true);
     }, 2000);
   }, []);
 
@@ -52,21 +54,26 @@ export default function ClockDisguise({ onUnlock, pin }: ClockDisguiseProps) {
       if (Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
-      const newPin = pinInput + digit;
-      setPinInput(newPin);
-      if (newPin.length === pin.length) {
-        if (newPin === pin) {
+      pinRef.current += digit;
+      setPinDisplay(pinRef.current);
+
+      if (pinRef.current.length === pin.length) {
+        if (pinRef.current === pin) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
           onUnlock();
         } else {
           setPinError(true);
           setTimeout(() => {
-            setPinInput('');
+            pinRef.current = '';
+            setPinDisplay('');
             setPinError(false);
           }, 500);
         }
       }
     },
-    [pinInput, pin, onUnlock],
+    [pin, onUnlock],
   );
 
   const hours = time.getHours().toString().padStart(2, '0');
@@ -90,7 +97,7 @@ export default function ClockDisguise({ onUnlock, pin }: ClockDisguiseProps) {
                 key={i}
                 style={[
                   styles.pinDot,
-                  i < pinInput.length && styles.pinDotFilled,
+                  i < pinDisplay.length && styles.pinDotFilled,
                   pinError && styles.pinDotError,
                 ]}
               />
@@ -108,8 +115,9 @@ export default function ClockDisguise({ onUnlock, pin }: ClockDisguiseProps) {
                           key="x"
                           style={styles.pinBtn}
                           onPress={() => {
+                            pinRef.current = '';
+                            setPinDisplay('');
                             setShowPinInput(false);
-                            setPinInput('');
                           }}
                         >
                           <Ionicons name="close" size={24} color={Colors.white} />

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,11 +21,17 @@ export default function NotesDisguise({ onUnlock, pin }: NotesDisguiseProps) {
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const unlocked = useRef(false);
 
-  const checkUnlock = useCallback(
+  const handleContentChange = useCallback(
     (text: string) => {
+      setContent(text);
+      if (unlocked.current) return;
       const trigger = '#AJ';
-      if (text.includes(pin + trigger)) {
+      const lower = text.toLowerCase();
+      const pinTrigger = (pin + trigger).toLowerCase();
+      if (lower.includes(pinTrigger)) {
+        unlocked.current = true;
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
@@ -33,14 +39,6 @@ export default function NotesDisguise({ onUnlock, pin }: NotesDisguiseProps) {
       }
     },
     [pin, onUnlock],
-  );
-
-  const handleContentChange = useCallback(
-    (text: string) => {
-      setContent(text);
-      checkUnlock(text);
-    },
-    [checkUnlock],
   );
 
   return (
@@ -84,7 +82,7 @@ export default function NotesDisguise({ onUnlock, pin }: NotesDisguiseProps) {
         <Pressable>
           <Ionicons name="pencil-outline" size={22} color="#007AFF" />
         </Pressable>
-        <Text style={styles.toolbarText}>0 caracteres</Text>
+        <Text style={styles.toolbarText}>{content.length} caracteres</Text>
         <Pressable>
           <Ionicons name="create-outline" size={22} color="#007AFF" />
         </Pressable>
