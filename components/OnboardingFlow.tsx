@@ -16,17 +16,13 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import Colors from '@/constants/colors';
 import { useApp } from '@/lib/app-context';
-import { EmergencyContact, DisguiseType, EMERGENCY_NUMBERS } from '@/lib/storage';
+import { EmergencyContact, DisguiseType, EMERGENCY_NUMBERS, PROVINCES_ANGOLA } from '@/lib/storage';
 import PinPad from './PinPad';
 
 type Step = 'welcome' | 'age' | 'location' | 'pin' | 'pin_confirm' | 'contacts' | 'disguise' | 'done';
 
 const AGE_RANGES = ['Menos de 12', '12-17', '18-25', '26-35', '36-50', 'Mais de 50'];
-const PROVINCES = [
-  'Luanda', 'Bengo', 'Benguela', 'Bié', 'Cabinda', 'Cunene',
-  'Huambo', 'Huíla', 'Kwando Kubango', 'Kwanza Norte', 'Kwanza Sul',
-  'Lunda Norte', 'Lunda Sul', 'Malanje', 'Moxico', 'Namibe', 'Uíge', 'Zaire',
-];
+const PROVINCES = PROVINCES_ANGOLA.map(p => p.name);
 
 const DISGUISES: { id: DisguiseType; name: string; icon: string; desc: string }[] = [
   { id: 'calculator', name: 'Calculadora', icon: 'calculator-outline', desc: 'PIN + =' },

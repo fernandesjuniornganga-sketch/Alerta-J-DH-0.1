@@ -11,8 +11,10 @@ import SOSDashboard from '@/components/SOSDashboard';
 import SettingsScreen from '@/components/SettingsScreen';
 import SafeStationsScreen from '@/components/SafeStationsScreen';
 import DisguiseSwitcher from '@/components/DisguiseSwitcher';
+import ResourcesScreen from '@/components/ResourcesScreen';
+import ReportScreen from '@/components/ReportScreen';
 
-type Screen = 'main' | 'settings' | 'stations' | 'disguise';
+type Screen = 'main' | 'settings' | 'stations' | 'disguise' | 'resources' | 'report';
 
 export default function MainScreen() {
   const { isLoading, isOnboarded, isUnlocked, pin, activeDisguise, setIsUnlocked } = useApp();
@@ -95,6 +97,20 @@ export default function MainScreen() {
           <StatusBar style="light" />
         </>
       );
+    case 'resources':
+      return (
+        <>
+          <ResourcesScreen onBack={() => setScreen('main')} />
+          <StatusBar style="light" />
+        </>
+      );
+    case 'report':
+      return (
+        <>
+          <ReportScreen onBack={() => setScreen('main')} />
+          <StatusBar style="light" />
+        </>
+      );
     default:
       return (
         <>
@@ -102,6 +118,8 @@ export default function MainScreen() {
             onSettings={() => setScreen('settings')}
             onSafeStations={() => setScreen('stations')}
             onDisguiseSwitch={() => setScreen('disguise')}
+            onResources={() => setScreen('resources')}
+            onReport={() => setScreen('report')}
           />
           <StatusBar style="light" />
         </>

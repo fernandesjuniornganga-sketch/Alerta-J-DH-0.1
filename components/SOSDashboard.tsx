@@ -31,6 +31,8 @@ interface SOSDashboardProps {
   onSettings: () => void;
   onSafeStations: () => void;
   onDisguiseSwitch: () => void;
+  onResources: () => void;
+  onReport: () => void;
 }
 
 function ContactCard({ contact }: { contact: EmergencyContact }) {
@@ -94,7 +96,7 @@ function SafeStationItem({ station }: { station: SafeStation }) {
   );
 }
 
-export default function SOSDashboard({ onSettings, onSafeStations, onDisguiseSwitch }: SOSDashboardProps) {
+export default function SOSDashboard({ onSettings, onSafeStations, onDisguiseSwitch, onResources, onReport }: SOSDashboardProps) {
   const insets = useSafeAreaInsets();
   const { contacts, safeStations, lock } = useApp();
   const [sosActive, setSOSActive] = useState(false);
@@ -280,6 +282,30 @@ export default function SOSDashboard({ onSettings, onSafeStations, onDisguiseSwi
           >
             <Ionicons name="swap-horizontal" size={22} color={Colors.accent} />
             <Text style={styles.quickLabel}>Trocar{'\n'}Disfarce</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.quickActions}>
+          <Pressable
+            onPress={onResources}
+            style={({ pressed }) => [styles.quickBtn, pressed && { opacity: 0.8 }]}
+          >
+            <Ionicons name="book" size={22} color="#4A90D9" />
+            <Text style={styles.quickLabel}>Prevenção{'\n'}e Direitos</Text>
+          </Pressable>
+          <Pressable
+            onPress={onReport}
+            style={({ pressed }) => [styles.quickBtn, pressed && { opacity: 0.8 }]}
+          >
+            <Ionicons name="document-text" size={22} color="#9B59B6" />
+            <Text style={styles.quickLabel}>Denúncia{'\n'}Anónima</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => makeCall(EMERGENCY_NUMBERS.mulher)}
+            style={({ pressed }) => [styles.quickBtn, pressed && { opacity: 0.8 }]}
+          >
+            <Ionicons name="call" size={22} color="#E91E63" />
+            <Text style={styles.quickLabel}>Linha{'\n'}Mulher 180</Text>
           </Pressable>
         </View>
 
